@@ -1,0 +1,84 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="emsdtool.SiteMaster" %>
+<!DOCTYPE html>
+<html lang="en">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><asp:ContentPlaceHolder ID="TitleContent" runat="server" /></title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="~/Content/site.css" rel="stylesheet" />
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
+</head>
+<body>
+<form id="form1" runat="server">
+    <div class="layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <span class="brand-title">EM Service Delivery Tool</span>
+
+                <!-- Hamburger (mobile only) -->
+                <button type="button" id="hamburgerBtn" class="hamburger" aria-label="Menu">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="menu" id="sideMenu">
+                <!-- Dashboard -->
+                <asp:HyperLink ID="hlDashboard" runat="server" NavigateUrl="~/Default.aspx" CssClass="menu-item">
+                    <i class="fa fa-gauge"></i><span>Dashboard</span>
+                </asp:HyperLink>
+                <asp:HyperLink ID="HyperLink1" runat="server" NavigateUrl="~/EmailNotification.aspx" CssClass="menu-item">
+                    <i class="fa fa-envelope"></i><span>Email Notification</span>
+                </asp:HyperLink>
+                <!-- Add more groups/items here -->
+            </nav>
+        </aside>
+
+        <!-- Main content -->
+        <main class="content">
+            <header class="page-header">
+                <asp:ContentPlaceHolder ID="PageHeader" runat="server" />
+            </header>
+
+            <section class="page-body">
+                <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+            </section>
+        </main>
+
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        (function () {
+            // Hamburger toggle
+            var btn = document.getElementById('hamburgerBtn');
+            var sidebar = document.getElementById('sidebar');
+            btn && btn.addEventListener('click', function () {
+                sidebar.classList.toggle('open');
+            });
+
+            // Submenu toggle
+            document.querySelectorAll('.menu-group-toggle').forEach(function (tgl) {
+                tgl.addEventListener('click', function () {
+                    var targetId = tgl.getAttribute('data-target');
+                    var sub = document.getElementById(targetId);
+
+                    // Mobile vs desktop behavior
+                    if (window.matchMedia("(max-width: 768px)").matches) {
+                        sub.classList.toggle('open');
+                    } else {
+                        sub.classList.toggle('collapsed');
+                    }
+                    tgl.classList.toggle('collapsed');
+                });
+            });
+        })();
+    </script>
+
+    <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
+</form>
+</body>
+</html>
