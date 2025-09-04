@@ -358,6 +358,27 @@ WHERE {COL_SUBMIT} IS NOT NULL
         /* --------------- MODAL HTML --------------- */
         private static string BuildModalHtml(string title, string modalId, List<DataRow> rows, int maxDays)
         {
+            // Build lookup of email submissions
+            var emailSentMap = new Dictionary<string, DateTime>();
+
+            using (var con = new SqlConnection(ConnStr))
+            using (var cmd = new SqlCommand("SELECT Number, SubmittedDate FROM EmailSubmit", con))
+            {
+                con.Open();
+                using (var rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        var number = rdr["Number"].ToString();
+                        if (DateTime.TryParse(rdr["SubmittedDate"]?.ToString(), out DateTime sentDate))
+                        {
+                            if (!string.IsNullOrWhiteSpace(number))
+                                emailSentMap[number.Trim()] = sentDate;
+                        }
+                    }
+                }
+            }
+
             var tableId = "recordsTable_" + modalId;
             var searchId = "sltnSearch_" + modalId;
             var selectAllId = "selectAllVisible_" + modalId;
@@ -423,19 +444,29 @@ WHERE {COL_SUBMIT} IS NOT NULL
                                 int over = Math.Max(0, daysInPhase - maxDays);
                                 string overCls = over > 0 ? "fw-bold text-danger" : "";
 
-                                sb.AppendLine($@"
-                            <tr>
-                                <td><input type='checkbox' name='SelectedRecordNumbers' value='{HttpUtility.HtmlAttributeEncode(sltn)}' /></td>
-                                <td class='sltn-number'>{HttpUtility.HtmlEncode(sltn)}</td>
-                                <td>{HttpUtility.HtmlEncode(proj)}</td>
-                                <td>{HttpUtility.HtmlEncode(state)}</td>
-                                <td>{HttpUtility.HtmlEncode(stage)}</td>
-                                <td>{HttpUtility.HtmlEncode(owner)}</td>
-                                <td>{HttpUtility.HtmlEncode(status)}</td>          <!-- render status -->
-                                <td>{daysInPhase}</td>
-                                <td class='{overCls}'>{over}</td>
-                            </tr>");
-                            }
+                // Check email submission status
+                string trClass = "";
+                if (emailSentMap.TryGetValue(sltn, out DateTime sentDate))
+                {
+                    if ((DateTime.Now - sentDate).TotalDays > 30)
+                        trClass = "table-danger"; // Bootstrap red
+                    else
+                        trClass = "table-warning"; // Bootstrap yellow
+                }
+
+                sb.AppendLine($@"
+                <tr class='{trClass}'>
+                    <td><input type='checkbox' name='SelectedRecordNumbers' value='{HttpUtility.HtmlAttributeEncode(sltn)}' /></td>
+                    <td class='sltn-number'>{HttpUtility.HtmlEncode(sltn)}</td>
+                    <td>{HttpUtility.HtmlEncode(proj)}</td>
+                    <td>{HttpUtility.HtmlEncode(state)}</td>
+                    <td>{HttpUtility.HtmlEncode(stage)}</td>
+                    <td>{HttpUtility.HtmlEncode(owner)}</td>
+                    <td>{HttpUtility.HtmlEncode(status)}</td>
+                    <td>{daysInPhase}</td>
+                    <td class='{overCls}'>{over}</td>
+                </tr>");
+            }
 
                             sb.AppendLine($@"
                             </tbody>
