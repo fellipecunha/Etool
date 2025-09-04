@@ -99,9 +99,12 @@ namespace emsdtool
         private void BindStatuses()
         {
             using (var con = new SqlConnection(ConnStr))
-            using (var cmd = new SqlCommand(
-                $"SELECT DISTINCT {COL_STATUS} AS StatusVal FROM DOC_SLTN_IDD_Reporting " +
-                $"WHERE {COL_STATUS} IS NOT NULL AND {COL_STATUS} <> '' ORDER BY {COL_STATUS}", con))
+            using (var cmd = new SqlCommand($@"
+        SELECT DISTINCT {COL_STATUS} AS StatusVal
+        FROM DOC_SLTN_IDD_Reporting
+        WHERE {COL_STATUS} IS NOT NULL AND {COL_STATUS} <> ''
+          AND {COL_STATUS} NOT IN ('Approved', 'On-Hold', 'Rejected')
+        ORDER BY {COL_STATUS}", con))
             {
                 con.Open();
                 using (var rdr = cmd.ExecuteReader())
@@ -113,6 +116,7 @@ namespace emsdtool
                 }
             }
         }
+
         private void BindStages()
         {
             using (var con = new SqlConnection(ConnStr))
