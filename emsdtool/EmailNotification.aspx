@@ -153,29 +153,6 @@
                     </div>
                 </div>
 
-                <!-- Assignment Group -->
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold mb-2">Assignment Group</label>
-                    <div class="dropdown w-100" data-bs-auto-close="outside">
-                        <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
-                                type="button" id="groupBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span id="groupSummary" class="sector-summary text-muted">Select groups…</span>
-                            <i class="fa fa-chevron-down ms-2 small"></i>
-                        </button>
-                        <div class="dropdown-menu p-3 w-100" style="max-height:220px; overflow-y:auto;">
-                            <asp:CheckBoxList ID="cblGroups" runat="server"
-                                              CssClass="form-check group-list" RepeatLayout="Flow" />
-                            <div class="d-flex justify-content-between mt-2">
-                                <button type="button" class="btn btn-sm btn-link p-0"
-                                        onclick="selectAllInList('<%= cblGroups.ClientID %>', 'groupSummary', true)">Select all</button>
-                                <button type="button" class="btn btn-sm btn-link text-danger p-0"
-                                        onclick="selectAllInList('<%= cblGroups.ClientID %>', 'groupSummary', false)">Clear</button>
-                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="dropdown">Done</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Max Days -->
                 <div class="col-md-3 col-lg-2">
                     <label class="form-label fw-semibold mb-2">Max Allowed Days</label>
@@ -368,7 +345,6 @@
         { id: "<%= cblStatuses.ClientID %>", summary: "statusSummary" },
         { id: "<%= cblStages.ClientID %>", summary: "stageSummary" },
         { id: "<%= cblStates.ClientID %>", summary: "stateSummary" },
-                { id: "<%= cblGroups.ClientID %>", summary: "groupSummary" }
             ];
 
             document.addEventListener('change', function (e) {

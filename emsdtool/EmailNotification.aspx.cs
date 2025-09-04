@@ -24,7 +24,6 @@ namespace emsdtool
         private const string COL_OWNER = "Application Manager SOEID";
         private const string COL_PROJ = "short_description";
         private const string COL_STATE = "state";
-        private const string COL_GROUP = "assignment_group";
         private const string COL_STATUS = "u_tech_dev_head_approval_status";  // Finalized
 
 
@@ -40,7 +39,6 @@ namespace emsdtool
                 BindStatuses();
                 BindStages();
                 BindStates();
-                BindGroups();
                 pnlNoRecords.Visible = false;
                 pnlTabsWrapper.Visible = false;
                 kpiRow.Visible = false;
@@ -65,9 +63,8 @@ namespace emsdtool
             bool statusesSelected = cblStatuses.Items.Cast<ListItem>().Any(i => i.Selected);
             bool stagesSelected = cblStages.Items.Cast<ListItem>().Any(i => i.Selected);
             bool statesSelected = cblStates.Items.Cast<ListItem>().Any(i => i.Selected);
-            bool groupsSelected = cblGroups.Items.Cast<ListItem>().Any(i => i.Selected);
 
-            if (!sectorsSelected || !statusesSelected || !stagesSelected || !statesSelected || !groupsSelected)
+            if (!sectorsSelected || !statusesSelected || !stagesSelected || !statesSelected)
             {
                 string msg = "Please select at least one item in all dropdowns.";
                 ScriptManager.RegisterStartupScript(this, GetType(), "valmsg",
@@ -151,23 +148,6 @@ namespace emsdtool
                 }
             }
         }
-        private void BindGroups()
-        {
-            using (var con = new SqlConnection(ConnStr))
-            using (var cmd = new SqlCommand(
-                $"SELECT DISTINCT {COL_GROUP} AS GroupVal FROM DOC_SLTN_IDD_Reporting " +
-                $"WHERE {COL_GROUP} IS NOT NULL AND {COL_GROUP} <> '' ORDER BY {COL_GROUP}", con))
-            {
-                con.Open();
-                using (var rdr = cmd.ExecuteReader())
-                {
-                    cblGroups.DataSource = rdr;
-                    cblGroups.DataTextField = "GroupVal";
-                    cblGroups.DataValueField = "GroupVal";
-                    cblGroups.DataBind();
-                }
-            }
-        }
 
         /* --------------- MAIN LOAD --------------- */
         private void LoadData()
@@ -188,16 +168,11 @@ namespace emsdtool
                                      .Select(i => i.Value)
                                      .ToList();
 
-            var selectedGroups = cblGroups.Items.Cast<ListItem>()
-                                     .Where(i => i.Selected)
-                                     .Select(i => i.Value)
-                                     .ToList();
-
             int maxDays = 30;
             int.TryParse(txtMaxDays.Text, out maxDays);
 
             // ----- 2. Query -----
-            var dt = GetRecords(maxDays, selectedSectors, selectedStatuses, selectedStates, selectedGroups);
+            var dt = GetRecords(maxDays, selectedSectors, selectedStatuses, selectedStates);
             Session["LastRecords"] = dt;
 
             if (dt == null || dt.Rows.Count == 0)
@@ -312,7 +287,7 @@ namespace emsdtool
 
 
         /* --------------- DB --------------- */
-        private DataTable GetRecords(int maxDays, List<string> sectors, List<string> statuses, List<string> states, List<string> groups)
+        private DataTable GetRecords(int maxDays, List<string> sectors, List<string> statuses, List<string> states)
         {
             var sql = new StringBuilder($@"
 SELECT *
@@ -341,13 +316,6 @@ WHERE {COL_SUBMIT} IS NOT NULL
                 sql.Append(")");
             }
 
-            if (groups != null && groups.Count > 0)
-            {
-                sql.Append(" AND " + COL_GROUP + " IN (");
-                sql.Append(string.Join(",", groups.Select((s, i) => "@grp" + i)));
-                sql.Append(")");
-            }
-
             var dt = new DataTable();
             using (var con = new SqlConnection(ConnStr))
             using (var cmd = new SqlCommand(sql.ToString(), con))
@@ -365,10 +333,6 @@ WHERE {COL_SUBMIT} IS NOT NULL
                 if (states != null)
                     for (int i = 0; i < states.Count; i++)
                         cmd.Parameters.AddWithValue("@state" + i, states[i]);
-
-                if (groups != null)
-                    for (int i = 0; i < groups.Count; i++)
-                        cmd.Parameters.AddWithValue("@grp" + i, groups[i]);
 
                 con.Open();
                 dt.Load(cmd.ExecuteReader());
@@ -449,7 +413,6 @@ WHERE {COL_SUBMIT} IS NOT NULL
                                 string proj = GetStr(r, COL_PROJ);
                                 string state = GetStr(r, COL_STATE);
                                 string stage = CleanLabel(GetStr(r, COL_STAGE));
-                                string group = CleanLabel(GetStr(r, COL_GROUP));
                                 string owner = GetStr(r, COL_OWNER);
                                 string status = GetStr(r, COL_STATUS);               // pull the status field
                                 DateTime sub = GetDate(r, COL_SUBMIT) ?? DateTime.MinValue;
@@ -467,7 +430,6 @@ WHERE {COL_SUBMIT} IS NOT NULL
                                 <td>{HttpUtility.HtmlEncode(proj)}</td>
                                 <td>{HttpUtility.HtmlEncode(state)}</td>
                                 <td>{HttpUtility.HtmlEncode(stage)}</td>
-                                <td>{HttpUtility.HtmlEncode(group)}</td>
                                 <td>{HttpUtility.HtmlEncode(owner)}</td>
                                 <td>{HttpUtility.HtmlEncode(status)}</td>          <!-- render status -->
                                 <td>{daysInPhase}</td>
@@ -604,7 +566,21 @@ WHERE {COL_SUBMIT} IS NOT NULL
                                 }
                             }
                             if (sentThis)
+                            {
                                 count++;
+
+                                // Log email submission
+                                using (var logCon = new SqlConnection(ConnStr))
+                                using (var logCmd = new SqlCommand("INSERT INTO EmailSubmit (Number, SubmittedDate) VALUES (@Number, @Date)", logCon))
+                                {
+                                    logCmd.Parameters.AddWithValue("@Number", sltn);
+                                    logCmd.Parameters.AddWithValue("@Date", DateTime.Now);
+
+                                    logCon.Open();
+                                    logCmd.ExecuteNonQuery();
+                                }
+                            }
+
                         }
                     }
                 }
