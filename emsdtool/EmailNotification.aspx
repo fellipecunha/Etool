@@ -5,6 +5,12 @@
 <asp:Content ID="HeadStuff" ContentPlaceHolderID="HeadContent" runat="server">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+
+    <!-- jQuery + DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <style>
         .page-title-bar{margin-bottom:1.25rem;padding:12px 0;border-bottom:1px solid #e5e7eb;}
@@ -51,76 +57,144 @@
 
     <!-- Filters -->
     <div id="filtersCollapse" class="collapse show">
-        <div class="card filter-card mb-4 shadow-sm border-0">
-            <div class="card-body">
-                <div class="row gy-3 gx-4 align-items-start">
+    <div class="card filter-card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <div class="row gy-3 gx-4 align-items-start">
 
-                    <!-- Funding Sector (multi-select dropdown) -->
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold mb-2">Sector</label>
-                        <div class="dropdown w-100" data-bs-auto-close="outside">
-                            <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
-                                    type="button" id="sectorBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span id="sectorSummary" class="sector-summary text-muted">Select sectors…</span>
-                                <i class="fa fa-chevron-down ms-2 small"></i>
-                            </button>
-
-                            <div class="dropdown-menu p-3 w-100" style="max-height:220px; overflow-y:auto;">
-                                <asp:CheckBoxList ID="cblSectors" runat="server"
-                                                  CssClass="form-check sector-list" RepeatLayout="Flow" />
-                                <div class="d-flex justify-content-between mt-2">
-                                    <button type="button" class="btn btn-sm btn-link p-0"
-                                            onclick="selectAllInList('<%= cblSectors.ClientID %>', 'sectorSummary', true)">Select all</button>
-                                    <button type="button" class="btn btn-sm btn-link text-danger p-0"
-                                            onclick="selectAllInList('<%= cblSectors.ClientID %>', 'sectorSummary', false)">Clear</button>
-                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="dropdown">Done</button>
-                                </div>
+                <!-- Sector -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold mb-2">Sector</label>
+                    <div class="dropdown w-100" data-bs-auto-close="outside">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
+                                type="button" id="sectorBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="sectorSummary" class="sector-summary text-muted">Select sectors…</span>
+                            <i class="fa fa-chevron-down ms-2 small"></i>
+                        </button>
+                        <div class="dropdown-menu p-3 w-100" style="max-height:220px; overflow-y:auto;">
+                            <asp:CheckBoxList ID="cblSectors" runat="server"
+                                              CssClass="form-check sector-list" RepeatLayout="Flow" />
+                            <div class="d-flex justify-content-between mt-2">
+                                <button type="button" class="btn btn-sm btn-link p-0"
+                                        onclick="selectAllInList('<%= cblSectors.ClientID %>', 'sectorSummary', true)">Select all</button>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0"
+                                        onclick="selectAllInList('<%= cblSectors.ClientID %>', 'sectorSummary', false)">Clear</button>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="dropdown">Done</button>
                             </div>
                         </div>
                     </div>
-                    <!-- Tech Dev Head Approval Status (multi-select dropdown) -->
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold mb-2">Approval Status</label>
-                        <div class="dropdown w-100" data-bs-auto-close="outside">
-                            <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
-                                    type="button" id="statusBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span id="statusSummary" class="sector-summary text-muted">Select status…</span>
-                                <i class="fa fa-chevron-down ms-2 small"></i>
-                            </button>
+                </div>
 
-                            <div class="dropdown-menu p-3 w-100" style="max-height:220px; overflow-y:auto;">
-                                <asp:CheckBoxList ID="cblStatuses" runat="server"
-                                                  CssClass="form-check status-list" RepeatLayout="Flow" />
-                                <div class="d-flex justify-content-between mt-2">
-                                    <button type="button" class="btn btn-sm btn-link p-0"
-                                            onclick="selectAllInList('<%= cblStatuses.ClientID %>', 'statusSummary', true)">Select all</button>
-                                    <button type="button" class="btn btn-sm btn-link text-danger p-0"
-                                            onclick="selectAllInList('<%= cblStatuses.ClientID %>', 'statusSummary', false)">Clear</button>
-                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="dropdown">Done</button>
-                                </div>
+                <!-- Approval Status -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold mb-2">Approval Status</label>
+                    <div class="dropdown w-100" data-bs-auto-close="outside">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
+                                type="button" id="statusBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="statusSummary" class="sector-summary text-muted">Select status…</span>
+                            <i class="fa fa-chevron-down ms-2 small"></i>
+                        </button>
+                        <div class="dropdown-menu p-3 w-100" style="max-height:220px; overflow-y:auto;">
+                            <asp:CheckBoxList ID="cblStatuses" runat="server"
+                                              CssClass="form-check status-list" RepeatLayout="Flow" />
+                            <div class="d-flex justify-content-between mt-2">
+                                <button type="button" class="btn btn-sm btn-link p-0"
+                                        onclick="selectAllInList('<%= cblStatuses.ClientID %>', 'statusSummary', true)">Select all</button>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0"
+                                        onclick="selectAllInList('<%= cblStatuses.ClientID %>', 'statusSummary', false)">Clear</button>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="dropdown">Done</button>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Max Days -->
-                    <div class="col-md-3 col-lg-2">
-                        <label class="form-label fw-semibold mb-2">Max Allowed Days</label>
-                        <asp:TextBox ID="txtMaxDays" runat="server" CssClass="form-control" Text="30" TextMode="Number" />
+                <!-- Stage -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold mb-2">Stage</label>
+                    <div class="dropdown w-100" data-bs-auto-close="outside">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
+                                type="button" id="stageBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="stageSummary" class="sector-summary text-muted">Select stages…</span>
+                            <i class="fa fa-chevron-down ms-2 small"></i>
+                        </button>
+                        <div class="dropdown-menu p-3 w-100" style="max-height:220px; overflow-y:auto;">
+                            <asp:CheckBoxList ID="cblStages" runat="server"
+                                              CssClass="form-check stage-list" RepeatLayout="Flow" />
+                            <div class="d-flex justify-content-between mt-2">
+                                <button type="button" class="btn btn-sm btn-link p-0"
+                                        onclick="selectAllInList('<%= cblStages.ClientID %>', 'stageSummary', true)">Select all</button>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0"
+                                        onclick="selectAllInList('<%= cblStages.ClientID %>', 'stageSummary', false)">Clear</button>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="dropdown">Done</button>
+                            </div>
+                        </div>
                     </div>
+                </div>
 
-                    <!-- Load -->
-                    <div class="col-md-3 col-lg-2 d-grid align-self-end">
-                        <asp:Button ID="btnLoad" runat="server"
-                                    CssClass="btn btn-primary btn-lg"
-                                    Text="Load Data"
-                                    OnClick="btnLoad_Click"
-                                    UseSubmitBehavior="false"
-                                    OnClientClick="return startLoaderPostback();" />
+                <!-- State -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold mb-2">State</label>
+                    <div class="dropdown w-100" data-bs-auto-close="outside">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
+                                type="button" id="stateBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="stateSummary" class="sector-summary text-muted">Select states…</span>
+                            <i class="fa fa-chevron-down ms-2 small"></i>
+                        </button>
+                        <div class="dropdown-menu p-3 w-100" style="max-height:220px; overflow-y:auto;">
+                            <asp:CheckBoxList ID="cblStates" runat="server"
+                                              CssClass="form-check state-list" RepeatLayout="Flow" />
+                            <div class="d-flex justify-content-between mt-2">
+                                <button type="button" class="btn btn-sm btn-link p-0"
+                                        onclick="selectAllInList('<%= cblStates.ClientID %>', 'stateSummary', true)">Select all</button>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0"
+                                        onclick="selectAllInList('<%= cblStates.ClientID %>', 'stateSummary', false)">Clear</button>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="dropdown">Done</button>
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Assignment Group -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold mb-2">Assignment Group</label>
+                    <div class="dropdown w-100" data-bs-auto-close="outside">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
+                                type="button" id="groupBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="groupSummary" class="sector-summary text-muted">Select groups…</span>
+                            <i class="fa fa-chevron-down ms-2 small"></i>
+                        </button>
+                        <div class="dropdown-menu p-3 w-100" style="max-height:220px; overflow-y:auto;">
+                            <asp:CheckBoxList ID="cblGroups" runat="server"
+                                              CssClass="form-check group-list" RepeatLayout="Flow" />
+                            <div class="d-flex justify-content-between mt-2">
+                                <button type="button" class="btn btn-sm btn-link p-0"
+                                        onclick="selectAllInList('<%= cblGroups.ClientID %>', 'groupSummary', true)">Select all</button>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0"
+                                        onclick="selectAllInList('<%= cblGroups.ClientID %>', 'groupSummary', false)">Clear</button>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="dropdown">Done</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Max Days -->
+                <div class="col-md-3 col-lg-2">
+                    <label class="form-label fw-semibold mb-2">Max Allowed Days</label>
+                    <asp:TextBox ID="txtMaxDays" runat="server" CssClass="form-control" Text="30" TextMode="Number" />
+                </div>
+
+                <!-- Load -->
+                <div class="col-md-3 col-lg-2 d-grid align-self-end">
+                    <asp:Button ID="btnLoad" runat="server"
+                                CssClass="btn btn-primary btn-lg"
+                                Text="Load Data"
+                                OnClick="btnLoad_Click"
+                                UseSubmitBehavior="false"
+                                OnClientClick="return startLoaderPostback();" />
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     <!-- KPI row -->
     <div class="row kpi-row justify-content-center" runat="server" id="kpiRow" visible="false">
@@ -289,51 +363,58 @@
 
         /* -------- Multi-select summaries (both dropdowns) -------- */
         (function () {
-            const sectorsId = "<%= cblSectors.ClientID %>";
-    const statusesId = "<%= cblStatuses.ClientID %>";
+            const filters = [
+                { id: "<%= cblSectors.ClientID %>", summary: "sectorSummary" },
+        { id: "<%= cblStatuses.ClientID %>", summary: "statusSummary" },
+        { id: "<%= cblStages.ClientID %>", summary: "stageSummary" },
+        { id: "<%= cblStates.ClientID %>", summary: "stateSummary" },
+                { id: "<%= cblGroups.ClientID %>", summary: "groupSummary" }
+            ];
 
-    document.addEventListener('change', function (e) {
-        if (e.target.closest('#' + sectorsId)) updateSummary(sectorsId, "sectorSummary");
-        if (e.target.closest('#' + statusesId)) updateSummary(statusesId, "statusSummary");
-    });
+            document.addEventListener('change', function (e) {
+                filters.forEach(f => {
+                    if (e.target.closest('#' + f.id)) updateSummary(f.id, f.summary);
+                });
+            });
 
-    document.addEventListener('DOMContentLoaded', function () {
-        updateSummary(sectorsId, "sectorSummary");
-        updateSummary(statusesId, "statusSummary");
-    });
+            document.addEventListener('DOMContentLoaded', function () {
+                filters.forEach(f => {
+                    updateSummary(f.id, f.summary);
+                });
+            });
 
-    // expose globally so Select All buttons can call it
-    window.updateSummary = function (listId, spanId) {
-        const span = document.getElementById(spanId);
-        if (!span) return;
+            // expose globally so Select All buttons can call it
+            window.updateSummary = function (listId, spanId) {
+                const span = document.getElementById(spanId);
+                if (!span) return;
 
-        const container = document.getElementById(listId);
-        const boxes = container ? container.querySelectorAll('input[type="checkbox"]') : [];
+                const container = document.getElementById(listId);
+                const boxes = container ? container.querySelectorAll('input[type="checkbox"]') : [];
 
-        const selected = [];
-        boxes.forEach(cb => {
-            if (cb.checked) {
-                const lbl = container.querySelector('label[for="' + cb.id + '"]');
-                selected.push(lbl ? lbl.textContent.trim() : cb.value);
-            }
-        });
+                const selected = [];
+                boxes.forEach(cb => {
+                    if (cb.checked) {
+                        const lbl = container.querySelector('label[for="' + cb.id + '"]');
+                        selected.push(lbl ? lbl.textContent.trim() : cb.value);
+                    }
+                });
 
-        if (selected.length === 0) {
-            span.textContent = 'Select…';
-            span.classList.add('text-muted');
-        } else {
-            span.classList.remove('text-muted');
-            span.innerHTML = selected.map(t => `<span class="sector-chip">${t}</span>`).join('');
-        }
-    };
+                if (selected.length === 0) {
+                    span.textContent = 'Select…';
+                    span.classList.add('text-muted');
+                } else {
+                    span.classList.remove('text-muted');
+                    span.innerHTML = selected.map(t => `<span class="sector-chip">${t}</span>`).join('');
+                }
+            };
 
-    // also global
-    window.selectAllInList = function (listId, spanId, check) {
-        const boxes = document.querySelectorAll('#' + listId + ' input[type="checkbox"]');
-        boxes.forEach(b => b.checked = check);
-        updateSummary(listId, spanId);   // refresh chips immediately
-    };
-})();
+            window.selectAllInList = function (listId, spanId, check) {
+                const boxes = document.querySelectorAll('#' + listId + ' input[type="checkbox"]');
+                boxes.forEach(b => b.checked = check);
+                updateSummary(listId, spanId); // refresh chips immediately
+            };
+        })();
+
 
         /* -------- Modal table helpers -------- */
         function filterRows(input, tableId, selectAllId) {
@@ -397,5 +478,33 @@
         }
     </script>
 
+    <script>
+        function exportTableToCSV(tableId, filename) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+
+            let csv = [];
+            const rows = table.querySelectorAll("tr");
+
+            for (const row of rows) {
+                let cols = row.querySelectorAll("th, td");
+                let rowData = Array.from(cols).map(col => {
+                    // Escape double quotes and commas
+                    const text = col.innerText.replace(/"/g, '""');
+                    return `"${text}"`;
+                });
+                csv.push(rowData.join(","));
+            }
+
+            // Create CSV Blob and trigger download
+            const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 
 </asp:Content>

@@ -16,16 +16,17 @@ namespace emsdtool
     public partial class EmailNotification : System.Web.UI.Page
     {
         /* ------------ DB COLUMN NAMES ------------ */
-        private const string COL_SECTOR = "Funding_Sector";
+        private const string COL_SECTOR = "Sector";
         private const string COL_STAGE = "u_stage";
         private const string COL_SUBMIT = "u_submission_date";
-        private const string COL_SYSID = "sys_id";
+        private const string COL_SYSID = "sys_id";                     // Unchanged
         private const string COL_SLTN = "number";
-        private const string COL_OWNER = "sys_created_by";
+        private const string COL_OWNER = "Application Manager SOEID";
         private const string COL_PROJ = "short_description";
         private const string COL_STATE = "state";
         private const string COL_GROUP = "assignment_group";
-        private const string COL_STATUS = "u_tech_dev_head_approval_status";
+        private const string COL_STATUS = "u_tech_dev_head_approval_status";  // Finalized
+
 
         private static string ConnStr =>
             ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
@@ -37,6 +38,9 @@ namespace emsdtool
             {
                 BindFundingSectors();
                 BindStatuses();
+                BindStages();
+                BindStates();
+                BindGroups();
                 pnlNoRecords.Visible = false;
                 pnlTabsWrapper.Visible = false;
                 kpiRow.Visible = false;
@@ -57,14 +61,17 @@ namespace emsdtool
 
         protected void btnLoad_Click(object sender, EventArgs e)
         {
-            var sectorsSelected = cblSectors.Items.Cast<ListItem>().Any(i => i.Selected);
-            var statusesSelected = cblStatuses.Items.Cast<ListItem>().Any(i => i.Selected);
+            bool sectorsSelected = cblSectors.Items.Cast<ListItem>().Any(i => i.Selected);
+            bool statusesSelected = cblStatuses.Items.Cast<ListItem>().Any(i => i.Selected);
+            bool stagesSelected = cblStages.Items.Cast<ListItem>().Any(i => i.Selected);
+            bool statesSelected = cblStates.Items.Cast<ListItem>().Any(i => i.Selected);
+            bool groupsSelected = cblGroups.Items.Cast<ListItem>().Any(i => i.Selected);
 
-            if (!sectorsSelected || !statusesSelected)
+            if (!sectorsSelected || !statusesSelected || !stagesSelected || !statesSelected || !groupsSelected)
             {
-                // simple alert; replace with a nicer toast if you want
+                string msg = "Please select at least one item in all dropdowns.";
                 ScriptManager.RegisterStartupScript(this, GetType(), "valmsg",
-                    "alert('Please select at least one item in both dropdowns.');", true);
+                    $"alert('{msg}');", true);
                 return;
             }
 
@@ -76,7 +83,7 @@ namespace emsdtool
         {
             using (var con = new SqlConnection(ConnStr))
             using (var cmd = new SqlCommand(
-                $"SELECT DISTINCT {COL_SECTOR} AS Sector FROM STLN_Core_Details " +
+                $"SELECT DISTINCT {COL_SECTOR} AS Sector FROM DOC_SLTN_IDD_Reporting " +
                 $"WHERE {COL_SECTOR} IS NOT NULL AND {COL_SECTOR} <> '' ORDER BY {COL_SECTOR}", con))
             {
                 con.Open();
@@ -93,7 +100,7 @@ namespace emsdtool
         {
             using (var con = new SqlConnection(ConnStr))
             using (var cmd = new SqlCommand(
-                $"SELECT DISTINCT {COL_STATUS} AS StatusVal FROM STLN_Core_Details " +
+                $"SELECT DISTINCT {COL_STATUS} AS StatusVal FROM DOC_SLTN_IDD_Reporting " +
                 $"WHERE {COL_STATUS} IS NOT NULL AND {COL_STATUS} <> '' ORDER BY {COL_STATUS}", con))
             {
                 con.Open();
@@ -103,6 +110,57 @@ namespace emsdtool
                     cblStatuses.DataTextField = "StatusVal";
                     cblStatuses.DataValueField = "StatusVal";
                     cblStatuses.DataBind();
+                }
+            }
+        }
+        private void BindStages()
+        {
+            using (var con = new SqlConnection(ConnStr))
+            using (var cmd = new SqlCommand(
+                $"SELECT DISTINCT {COL_STAGE} AS StageVal FROM DOC_SLTN_IDD_Reporting " +
+                $"WHERE {COL_STAGE} IS NOT NULL AND {COL_STAGE} <> '' ORDER BY {COL_STAGE}", con))
+            {
+                con.Open();
+                using (var rdr = cmd.ExecuteReader())
+                {
+                    cblStages.DataSource = rdr;
+                    cblStages.DataTextField = "StageVal";
+                    cblStages.DataValueField = "StageVal";
+                    cblStages.DataBind();
+                }
+            }
+        }
+        private void BindStates()
+        {
+            using (var con = new SqlConnection(ConnStr))
+            using (var cmd = new SqlCommand(
+                $"SELECT DISTINCT {COL_STATE} AS StateVal FROM DOC_SLTN_IDD_Reporting " +
+                $"WHERE {COL_STATE} IS NOT NULL AND {COL_STATE} <> '' ORDER BY {COL_STATE}", con))
+            {
+                con.Open();
+                using (var rdr = cmd.ExecuteReader())
+                {
+                    cblStates.DataSource = rdr;
+                    cblStates.DataTextField = "StateVal";
+                    cblStates.DataValueField = "StateVal";
+                    cblStates.DataBind();
+                }
+            }
+        }
+        private void BindGroups()
+        {
+            using (var con = new SqlConnection(ConnStr))
+            using (var cmd = new SqlCommand(
+                $"SELECT DISTINCT {COL_GROUP} AS GroupVal FROM DOC_SLTN_IDD_Reporting " +
+                $"WHERE {COL_GROUP} IS NOT NULL AND {COL_GROUP} <> '' ORDER BY {COL_GROUP}", con))
+            {
+                con.Open();
+                using (var rdr = cmd.ExecuteReader())
+                {
+                    cblGroups.DataSource = rdr;
+                    cblGroups.DataTextField = "GroupVal";
+                    cblGroups.DataValueField = "GroupVal";
+                    cblGroups.DataBind();
                 }
             }
         }
@@ -117,15 +175,25 @@ namespace emsdtool
                                      .ToList();
 
             var selectedStatuses = cblStatuses.Items.Cast<ListItem>()
-                            .Where(i => i.Selected)
-                            .Select(i => i.Value)
-                            .ToList();
+                                     .Where(i => i.Selected)
+                                     .Select(i => i.Value)
+                                     .ToList();
+
+            var selectedStates = cblStates.Items.Cast<ListItem>()
+                                     .Where(i => i.Selected)
+                                     .Select(i => i.Value)
+                                     .ToList();
+
+            var selectedGroups = cblGroups.Items.Cast<ListItem>()
+                                     .Where(i => i.Selected)
+                                     .Select(i => i.Value)
+                                     .ToList();
 
             int maxDays = 30;
             int.TryParse(txtMaxDays.Text, out maxDays);
 
             // ----- 2. Query -----
-            var dt = GetRecords(maxDays, selectedSectors, selectedStatuses);
+            var dt = GetRecords(maxDays, selectedSectors, selectedStatuses, selectedStates, selectedGroups);
             Session["LastRecords"] = dt;
 
             if (dt == null || dt.Rows.Count == 0)
@@ -213,6 +281,7 @@ namespace emsdtool
                 BuildModalHtml("All Flagged Records", "allModal", dt.AsEnumerable().ToList(), maxDays)));
         }
 
+
         /* ---------- helpers ---------- */
         private void SetLiteralText(string id, string value)
         {
@@ -239,13 +308,13 @@ namespace emsdtool
 
 
         /* --------------- DB --------------- */
-        private DataTable GetRecords(int maxDays, List<string> sectors, List<string> statuses)
+        private DataTable GetRecords(int maxDays, List<string> sectors, List<string> statuses, List<string> states, List<string> groups)
         {
             var sql = new StringBuilder($@"
-        SELECT *
-        FROM STLN_Core_Details
-        WHERE {COL_SUBMIT} IS NOT NULL
-          AND DATEDIFF(DAY, {COL_SUBMIT}, GETDATE()) > @MaxDays");
+SELECT *
+FROM DOC_SLTN_IDD_Reporting
+WHERE {COL_SUBMIT} IS NOT NULL
+  AND DATEDIFF(DAY, {COL_SUBMIT}, GETDATE()) > @MaxDays");
 
             if (sectors != null && sectors.Count > 0)
             {
@@ -258,6 +327,20 @@ namespace emsdtool
             {
                 sql.Append(" AND " + COL_STATUS + " IN (");
                 sql.Append(string.Join(",", statuses.Select((s, i) => "@st" + i)));
+                sql.Append(")");
+            }
+
+            if (states != null && states.Count > 0)
+            {
+                sql.Append(" AND " + COL_STATE + " IN (");
+                sql.Append(string.Join(",", states.Select((s, i) => "@state" + i)));
+                sql.Append(")");
+            }
+
+            if (groups != null && groups.Count > 0)
+            {
+                sql.Append(" AND " + COL_GROUP + " IN (");
+                sql.Append(string.Join(",", groups.Select((s, i) => "@grp" + i)));
                 sql.Append(")");
             }
 
@@ -275,9 +358,18 @@ namespace emsdtool
                     for (int i = 0; i < statuses.Count; i++)
                         cmd.Parameters.AddWithValue("@st" + i, statuses[i]);
 
+                if (states != null)
+                    for (int i = 0; i < states.Count; i++)
+                        cmd.Parameters.AddWithValue("@state" + i, states[i]);
+
+                if (groups != null)
+                    for (int i = 0; i < groups.Count; i++)
+                        cmd.Parameters.AddWithValue("@grp" + i, groups[i]);
+
                 con.Open();
                 dt.Load(cmd.ExecuteReader());
             }
+
             return dt;
         }
 
@@ -305,88 +397,108 @@ namespace emsdtool
             var sb = new StringBuilder();
 
             sb.AppendLine($@"
-                    <div class='modal fade' id='{modalId}' tabindex='-1' role='dialog' aria-modal='true'>
-                      <div class='modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable' role='document'>
-                        <div class='modal-content shadow-lg border-0'>
-                          <div class='modal-header bg-primary text-white'>
-                            <h5 class='modal-title'>{HttpUtility.HtmlEncode(title)}</h5>
-                            <button type='button' class='btn-close btn-close-white' data-bs-dismiss='modal' aria-label='Close'></button>
-                          </div>
+  <div class='modal fade' id='{modalId}' tabindex='-1' role='dialog' aria-modal='true'>
+    <div class='modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable' role='document'>
+      <div class='modal-content shadow-lg border-0'>
+        <div class='modal-header bg-primary text-white'>
+          <h5 class='modal-title'>{HttpUtility.HtmlEncode(title)}</h5>
+          <button type='button' class='btn-close btn-close-white' data-bs-dismiss='modal' aria-label='Close'></button>
+        </div>
 
-                          <div class='modal-body' style='max-height:70vh; overflow-y:auto;'>
-                            <div class='mb-3' style='max-width:700px;'>
-                              <input id='{searchId}' type='text' class='form-control w-100'
-                                     placeholder='Filter by SLTN numbers (comma or space separated)'
-                                     autocomplete='off'
-                                     oninput='filterRows(this,""{tableId}"",""{selectAllId}"")' />
-                            </div>
+        <div class='modal-body' style='max-height:70vh; overflow-y:auto;'>
+          <div class='d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2'>
+            <div style='flex: 1; min-width: 250px; max-width:700px;'>
+              <input id='{searchId}' type='text' class='form-control w-100'
+                     placeholder='Filter by SLTN numbers (comma or space separated)'
+                     autocomplete='off'
+                     oninput='filterRows(this,""{tableId}"",""{selectAllId}"")' />
+            </div>
+            <button type='button' class='btn btn-outline-primary btn-sm'
+                    onclick='exportTableToCSV(""{tableId}"", ""{modalId}.csv"")'>
+              ⬇ Export CSV
+            </button>
+          </div>
 
-                            <table id='{tableId}' class='table table-bordered table-striped table-hover align-middle'>
-                              <thead class='table-light sticky-top'>
-                                <tr>
-                                  <th style=""width:32px;"">
-                                    <input type='checkbox' id='{selectAllId}' onclick='toggleAllVisible(this,""{tableId}"")' />
-                                  </th>
-                                  <th>SLTN</th>
-                                  <th>Project Name</th>
-                                  <th>State</th>
-                                  <th>Stage</th>
-                                  <th>Assigned Group</th>
-                                  <th>Created By</th>
-                                  <th>Approval Status</th>      <!-- new column -->
-                                  <th>Days in Phase</th>
-                                  <th>Days &gt; {maxDays}</th>
-                                </tr>
-                              </thead>
-                              <tbody>");
+          <table id='{tableId}' class='table table-bordered table-striped table-hover align-middle'>
+            <thead class='table-light sticky-top'>
+              <tr>
+                <th style=""width:32px;"">
+                  <input type='checkbox' id='{selectAllId}' onclick='toggleAllVisible(this,""{tableId}"")' />
+                </th>
+                <th>SLTN</th>
+                <th>Project Name</th>
+                <th>State</th>
+                <th>Stage</th>
+                <th>Assigned Group</th>
+                <th>Created By</th>
+                <th>Approval Status</th>
+                <th>Days in Phase</th>
+                <th>Days &gt; {maxDays}</th>
+              </tr>
+            </thead>
+            <tbody>");
 
-                                foreach (var r in rows)
-                                {
-                                    string sltn = GetStr(r, COL_SLTN);
-                                    string proj = GetStr(r, COL_PROJ);
-                                    string state = GetStr(r, COL_STATE);
-                                    string stage = CleanLabel(GetStr(r, COL_STAGE));
-                                    string group = CleanLabel(GetStr(r, COL_GROUP));
-                                    string owner = GetStr(r, COL_OWNER);
-                                    string status = GetStr(r, COL_STATUS);               // pull the status field
-                                    DateTime sub = GetDate(r, COL_SUBMIT) ?? DateTime.MinValue;
 
-                                    int daysInPhase = sub == DateTime.MinValue
-                                                      ? 0
-                                                      : (int)(DateTime.Now - sub).TotalDays;
-                                    int over = Math.Max(0, daysInPhase - maxDays);
-                                    string overCls = over > 0 ? "fw-bold text-danger" : "";
+            foreach (var r in rows)
+                            {
+                                string sltn = GetStr(r, COL_SLTN);
+                                string proj = GetStr(r, COL_PROJ);
+                                string state = GetStr(r, COL_STATE);
+                                string stage = CleanLabel(GetStr(r, COL_STAGE));
+                                string group = CleanLabel(GetStr(r, COL_GROUP));
+                                string owner = GetStr(r, COL_OWNER);
+                                string status = GetStr(r, COL_STATUS);               // pull the status field
+                                DateTime sub = GetDate(r, COL_SUBMIT) ?? DateTime.MinValue;
 
-                                    sb.AppendLine($@"
-                                <tr>
-                                  <td><input type='checkbox' name='SelectedRecordNumbers' value='{HttpUtility.HtmlAttributeEncode(sltn)}' /></td>
-                                  <td class='sltn-number'>{HttpUtility.HtmlEncode(sltn)}</td>
-                                  <td>{HttpUtility.HtmlEncode(proj)}</td>
-                                  <td>{HttpUtility.HtmlEncode(state)}</td>
-                                  <td>{HttpUtility.HtmlEncode(stage)}</td>
-                                  <td>{HttpUtility.HtmlEncode(group)}</td>
-                                  <td>{HttpUtility.HtmlEncode(owner)}</td>
-                                  <td>{HttpUtility.HtmlEncode(status)}</td>          <!-- render status -->
-                                  <td>{daysInPhase}</td>
-                                  <td class='{overCls}'>{over}</td>
-                                </tr>");
-                                }
+                                int daysInPhase = sub == DateTime.MinValue
+                                                    ? 0
+                                                    : (int)(DateTime.Now - sub).TotalDays;
+                                int over = Math.Max(0, daysInPhase - maxDays);
+                                string overCls = over > 0 ? "fw-bold text-danger" : "";
 
                                 sb.AppendLine($@"
-                              </tbody>
-                            </table>
-                          </div>
-                          <div class='modal-footer bg-light d-flex justify-content-between'>
-                            <button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Close</button>
-                            <button type='button' class='btn btn-success' onclick='sendEmail(""{modalId}"")'>
-                              📧 Send Email to Selected
-                            </button>
-                          </div>
+                            <tr>
+                                <td><input type='checkbox' name='SelectedRecordNumbers' value='{HttpUtility.HtmlAttributeEncode(sltn)}' /></td>
+                                <td class='sltn-number'>{HttpUtility.HtmlEncode(sltn)}</td>
+                                <td>{HttpUtility.HtmlEncode(proj)}</td>
+                                <td>{HttpUtility.HtmlEncode(state)}</td>
+                                <td>{HttpUtility.HtmlEncode(stage)}</td>
+                                <td>{HttpUtility.HtmlEncode(group)}</td>
+                                <td>{HttpUtility.HtmlEncode(owner)}</td>
+                                <td>{HttpUtility.HtmlEncode(status)}</td>          <!-- render status -->
+                                <td>{daysInPhase}</td>
+                                <td class='{overCls}'>{over}</td>
+                            </tr>");
+                            }
+
+                            sb.AppendLine($@"
+                            </tbody>
+                        </table>
                         </div>
-                      </div>
-                    </div>");
+                        <div class='modal-footer bg-light d-flex justify-content-between'>
+                        <button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Close</button>
+                        <button type='button' class='btn btn-success' onclick='sendEmail(""{modalId}"")'>
+                            📧 Send Email to Selected
+                        </button>
+                        </div>
+                    </div>
+                    </div>
+                </div>");
+
+            sb.AppendLine($@"
+        <script>
+            $(document).ready(function () {{
+                $('#{tableId}').DataTable({{
+                    order: [[1, 'asc']],
+                    paging: true,
+                    searching: true,
+                    autoWidth: false
+                }});
+            }});
+        </script>");
 
             return sb.ToString();
+
         }
 
 

@@ -33,6 +33,33 @@ namespace emsdtool
         protected global::System.Web.UI.WebControls.CheckBoxList cblStatuses;
 
         /// <summary>
+        /// cblStages control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBoxList cblStages;
+
+        /// <summary>
+        /// cblStates control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBoxList cblStates;
+
+        /// <summary>
+        /// cblGroups control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBoxList cblGroups;
+
+        /// <summary>
         /// txtMaxDays control.
         /// </summary>
         /// <remarks>
